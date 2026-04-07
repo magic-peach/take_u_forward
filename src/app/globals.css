@@ -1,11 +1,98 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
-/* register --accent-color as animatable — browsers that support @property
-   will tween it automatically when the value changes. others just snap. */
 @property --accent-color {
   syntax: '<color>';
   inherits: true;
-  initial-value: #2C3E7A;
+  initial-value: #6B5B8A;
+}
+
+/* ── Design Tokens ── */
+:root {
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* type scale */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --font-ui: 'IBM Plex Sans', sans-serif;
+  --font-display: 'Lora', Georgia, serif;
+
+  /* radius */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 9999px;
+
+  /* animation */
+  --duration-fast: 100ms;
+  --duration-base: 180ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* surfaces — light */
+  --surface-page: #F2EFE9;
+  --surface-card: #FFFFFF;
+  --surface-sunken: #F5F3EF;
+
+  /* text — light */
+  /* --text-primary on white: 17.5:1 ✓ AAA */
+  --text-primary: #1a1917;
+  /* --text-secondary on white: 5.8:1 ✓ AA */
+  --text-secondary: #6b6762;
+  /* --text-tertiary: decorative / muted */
+  --text-tertiary: #b0aca6;
+
+  /* borders */
+  --border-default: #E2DED8;
+  --border-strong: #C4C0BA;
+
+  /* shadows */
+  --shadow-card: 0 6px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
+
+  /* accent (updated per month via JS) */
+  --accent-color: #6B5B8A;
+
+  /* focus ring */
+  --focus-ring: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--accent-color);
+}
+
+/* dark mode — class wins over prefers-color-scheme */
+body.dark-mode {
+  --surface-page: #111009;
+  --surface-card: #1E1B16;
+  --surface-sunken: #28251F;
+  --text-primary: #e8e4df;
+  --text-secondary: #a8a49f;
+  --text-tertiary: #5a5754;
+  --border-default: #2e2b26;
+  --border-strong: #3e3b36;
+  --shadow-card: 0 6px 32px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.light-mode) {
+    --surface-page: #111009;
+    --surface-card: #1E1B16;
+    --surface-sunken: #28251F;
+    --text-primary: #e8e4df;
+    --text-secondary: #a8a49f;
+    --text-tertiary: #5a5754;
+    --border-default: #2e2b26;
+    --border-strong: #3e3b36;
+    --shadow-card: 0 6px 32px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.3);
+  }
 }
 
 *, *::before, *::after {
@@ -14,58 +101,36 @@
   padding: 0;
 }
 
-:root {
-  --accent-color: #2C3E7A;
-  --page-bg: #F2EFE9;
-  --card-bg: #FFFFFF;
-  --text-primary: #1a1917;
-  --text-secondary: #706c67;
-  --border-color: #E0DDD8;
-  --day-hover: #f5f3ef;
-  --shadow-card: 0 6px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
-}
-
 body {
-  font-family: 'IBM Plex Sans', sans-serif;
-  background: var(--page-bg);
+  font-family: var(--font-ui);
+  background: var(--surface-page);
   color: var(--text-primary);
   min-height: 100vh;
-  transition: background 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background var(--duration-slow) var(--ease-in-out),
+              color var(--duration-slow) var(--ease-in-out);
 }
 
-/* dark mode driven by class on body, not prefers-color-scheme
-   (manual toggle overrides system preference) */
-body.dark-mode {
-  --page-bg: #111009;
-  --card-bg: #1E1B16;
-  --text-primary: #e8e4df;
-  --text-secondary: #a8a49f;
-  --border-color: #2e2b26;
-  --day-hover: #2a2720;
-  --shadow-card: 0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+/* global focus — never remove, always replace */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-/* prefers-color-scheme as a baseline — manual toggle wins */
-@media (prefers-color-scheme: dark) {
-  body:not(.light-mode) {
-    --page-bg: #111009;
-    --card-bg: #1E1B16;
-    --text-primary: #e8e4df;
-    --text-secondary: #a8a49f;
-    --border-color: #2e2b26;
-    --day-hover: #2a2720;
-    --shadow-card: 0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
-  }
+/* sr-only: visually hidden but in accessibility tree */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* respect motion preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -75,7 +140,5 @@ a {
 }
 
 @media print {
-  body {
-    background: white !important;
-  }
+  body { background: white !important; }
 }

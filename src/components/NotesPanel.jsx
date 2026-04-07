@@ -7,8 +7,7 @@ function formatRange(note) {
   if (note.rangeStart && note.rangeEnd) {
     const s = note.rangeStart.slice(5).replace('-', '/');
     const e = note.rangeEnd.slice(5).replace('-', '/');
-    if (s === e) return s;
-    return `${s} – ${e}`;
+    return s === e ? s : `${s} – ${e}`;
   }
   return null;
 }
@@ -22,6 +21,7 @@ export default function NotesPanel({
   onAddNote,
   onDeleteNote,
   onReorderNotes,
+  onNoteAnnounce,
 }) {
   const [noteText, setNoteText] = useState('');
   const [selectedColor, setSelectedColor] = useState(NOTE_COLORS[0]);
@@ -29,20 +29,17 @@ export default function NotesPanel({
   const panelRef = useRef(null);
   const inputRef = useRef(null);
   const addBtnRef = useRef(null);
-  const swatchRefs = useRef([]);
 
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-
-  // filter notes to only show current month
   const visibleNotes = notes.filter(n => n.monthKey === monthKey);
 
-  // drag-to-reorder state
   const draggedIdx = useRef(null);
   const [dropTargetIdx, setDropTargetIdx] = useState(null);
 
   function handleAdd() {
     if (!noteText.trim()) return;
     onAddNote(noteText, selectedColor, monthKey);
+    onNoteAnnounce && onNoteAnnounce(`Note added: ${noteText}`);
     setNoteText('');
   }
 
@@ -53,42 +50,33 @@ export default function NotesPanel({
     }
   }
 
-  // focus trap within the notes panel
-  // when inside the panel, Tab cycles: input → swatches → add btn → input
+  // focus trap: Tab cycles within the panel when focus is inside
   function handlePanelKeyDown(e) {
     if (e.key !== 'Tab') return;
+    if (!panelRef.current?.contains(document.activeElement)) return;
 
-    const focusable = panelRef.current?.querySelectorAll(
-      'input, textarea, button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const focusable = panelRef.current.querySelectorAll(
+      'button:not([disabled]), textarea:not([disabled]), [tabindex="0"]'
     );
-    if (!focusable || focusable.length === 0) return;
+    if (!focusable.length) return;
 
     const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const last  = focusable[focusable.length - 1];
 
-    if (!panelRef.current.contains(document.activeElement)) return;
-
-    if (e.shiftKey) {
-      if (document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
     }
   }
 
-  // drag and drop handlers — raw HTML5, no library
+  // drag-to-reorder — raw HTML5, no library
   const handleDragStart = useCallback((e, idx) => {
     draggedIdx.current = idx;
     e.dataTransfer.effectAllowed = 'move';
-    // tiny delay so the ghost image gets captured properly
-    setTimeout(() => {
-      if (e.target) e.target.style.opacity = '0.4';
-    }, 0);
+    setTimeout(() => { if (e.target) e.target.style.opacity = '0.4'; }, 0);
   }, []);
 
   const handleDragEnd = useCallback((e) => {
@@ -108,13 +96,11 @@ export default function NotesPanel({
     const fromIdx = draggedIdx.current;
     if (fromIdx === null || fromIdx === toIdx) return;
 
-    // find the actual indices in the full notes array
-    // this is a bit convoluted because visibleNotes is a filtered view
-    const fullFromIdx = notes.indexOf(visibleNotes[fromIdx]);
-    const fullToIdx = notes.indexOf(visibleNotes[toIdx]);
+    const fullFrom = notes.indexOf(visibleNotes[fromIdx]);
+    const fullTo   = notes.indexOf(visibleNotes[toIdx]);
 
-    if (fullFromIdx >= 0 && fullToIdx >= 0) {
-      onReorderNotes(fullFromIdx, fullToIdx);
+    if (fullFrom >= 0 && fullTo >= 0) {
+      onReorderNotes(fullFrom, fullTo);
     }
     setDropTargetIdx(null);
     draggedIdx.current = null;
@@ -128,23 +114,22 @@ export default function NotesPanel({
     >
       <p className={styles.notesHeader}>Notes</p>
 
-      {/* color picker */}
+      {/* color swatches with ring-on-active */}
       <div className={styles.colorSwatches}>
         <span className={styles.colorSwatchLabel}>Color:</span>
-        {NOTE_COLORS.map((c, i) => (
+        {NOTE_COLORS.map((c) => (
           <button
             key={c}
-            ref={el => swatchRefs.current[i] = el}
             className={`${styles.swatch} ${selectedColor === c ? styles.isSelected : ''}`}
-            style={{ background: c }}
+            style={{ '--sc': c, background: c }}
             onClick={() => setSelectedColor(c)}
-            aria-label={`Note color ${i + 1}`}
+            aria-label={`Note color`}
             aria-pressed={selectedColor === c}
           />
         ))}
       </div>
 
-      {/* input row */}
+      {/* input + add button */}
       <div className={styles.noteInputRow}>
         <textarea
           ref={inputRef}
@@ -160,8 +145,8 @@ export default function NotesPanel({
           ref={addBtnRef}
           className={styles.noteAddBtn}
           onClick={handleAdd}
-          aria-label="Add note"
           disabled={!noteText.trim()}
+          aria-label="Add note"
         >
           Add
         </button>
@@ -170,42 +155,46 @@ export default function NotesPanel({
       {/* notes list */}
       <ul
         className={styles.notesList}
+        aria-label="Notes"
         aria-live="polite"
-        aria-label="Notes list"
+        aria-atomic="false"
       >
-        {visibleNotes.map((note, i) => {
-          const isDropTarget = dropTargetIdx === i;
+        {visibleNotes.map((note, i) => (
+          <li
+            key={note.id}
+            className={[
+              styles.noteItem,
+              dropTargetIdx === i ? styles.isDragOver : '',
+            ].filter(Boolean).join(' ')}
+            style={{ '--ni-color': note.color }}
+            draggable={true}
+            onDragStart={e => handleDragStart(e, i)}
+            onDragEnd={handleDragEnd}
+            onDragOver={e => handleDragOver(e, i)}
+            onDrop={e => handleDrop(e, i)}
+          >
+            {/* drag handle — ⠿ braille 6-dot pattern */}
+            <span className={styles.dragHandle} aria-hidden="true">⠿</span>
 
-          return (
-            <li
-              key={note.id}
-              className={[
-                styles.noteItem,
-                isDropTarget ? styles.isDragOver : '',
-              ].filter(Boolean).join(' ')}
-              style={{ '--ni-color': note.color }}
-              draggable={true}
-              onDragStart={e => handleDragStart(e, i)}
-              onDragEnd={handleDragEnd}
-              onDragOver={e => handleDragOver(e, i)}
-              onDrop={e => handleDrop(e, i)}
+            <div className={styles.noteBody}>
+              {formatRange(note) && (
+                <div className={styles.noteRangeLabel}>{formatRange(note)}</div>
+              )}
+              <div className={styles.noteText}>{note.text}</div>
+            </div>
+
+            <button
+              className={styles.noteDeleteBtn}
+              onClick={() => {
+                onDeleteNote(note.id);
+                onNoteAnnounce && onNoteAnnounce(`Note deleted: ${note.text}`);
+              }}
+              aria-label={`Delete note: ${note.text}`}
             >
-              <div className={styles.noteItemContent}>
-                {formatRange(note) && (
-                  <div className={styles.noteItemDate}>{formatRange(note)}</div>
-                )}
-                <div className={styles.noteItemText}>{note.text}</div>
-              </div>
-              <button
-                className={styles.noteDeleteBtn}
-                onClick={() => onDeleteNote(note.id)}
-                aria-label={`Delete note: ${note.text}`}
-              >
-                ×
-              </button>
-            </li>
-          );
-        })}
+              ×
+            </button>
+          </li>
+        ))}
       </ul>
     </div>
   );

@@ -3,62 +3,80 @@ import { useKeyboard } from './useKeyboard';
 import { MONTH_NAMES } from './useCalendarState';
 import styles from './calendar.module.css';
 
-const DOW_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DOW_SHORT   = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DOW_FULL    = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKEND_IDX = new Set([0, 6]);
 
-// builds the 42-cell grid for a given month
+// build 42 cells for a month, returned as a flat array
 function buildCells(month, year) {
-  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevMonthDays = new Date(year, month, 0).getDate();
-
   const cells = [];
 
-  // padding from prev month
   for (let i = firstDay - 1; i >= 0; i--) {
     cells.push({ dayNum: prevMonthDays - i, isCurrent: false, dateStr: null });
   }
-
-  // current month days
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     cells.push({ dayNum: d, isCurrent: true, dateStr });
   }
-
-  // fill to 42
   let next = 1;
   while (cells.length < 42) {
     cells.push({ dayNum: next++, isCurrent: false, dateStr: null });
   }
-
   return cells;
 }
 
-// returns range state for a given dateStr across all ranges
-// each entry: { isStart, isEnd, isInRange, color } or null
-function getRangeStates(dateStr, ranges) {
-  if (!dateStr) return [];
-  return ranges.map(range => {
-    if (!range.startDate || !range.endDate) return null;
-    const isStart = dateStr === range.startDate;
-    const isEnd = dateStr === range.endDate;
-    const isInRange = dateStr > range.startDate && dateStr < range.endDate;
-    if (!isStart && !isEnd && !isInRange) return null;
-    return { isStart, isEnd, isInRange, color: range.color };
-  });
+function groupIntoWeeks(cells) {
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+  return weeks;
 }
 
-// figure out preview range state for when user is mid-selection
-function getPreviewState(dateStr, anchor, hoverDate, color) {
-  if (!anchor || !hoverDate || !dateStr) return null;
-  const [start, end] = anchor <= hoverDate ? [anchor, hoverDate] : [hoverDate, anchor];
+// returns range position info for a cell, preferring the active range
+function getCellRangeInfo(dateStr, ranges, activeRangeIdx) {
+  if (!dateStr) return null;
+
+  let firstMatch = null;
+  let activeMatch = null;
+
+  ranges.forEach((range, i) => {
+    if (!range.startDate || !range.endDate) return;
+
+    const isStart = dateStr === range.startDate;
+    const isEnd   = dateStr === range.endDate;
+    const isMiddle = !isStart && !isEnd && dateStr > range.startDate && dateStr < range.endDate;
+
+    if (!isStart && !isEnd && !isMiddle) return;
+
+    const info = {
+      color: range.color,
+      isStart, isEnd, isMiddle,
+      isSingle: isStart && isEnd,
+    };
+
+    if (!firstMatch) firstMatch = info;
+    if (i === activeRangeIdx) activeMatch = info;
+  });
+
+  return activeMatch || firstMatch;
+}
+
+// compute preview range info while user is mid-selection
+function getPreviewInfo(dateStr, anchor, hover, color) {
+  if (!anchor || !hover || !dateStr) return null;
+
+  const [start, end] = anchor <= hover ? [anchor, hover] : [hover, anchor];
   if (dateStr < start || dateStr > end) return null;
-  return {
-    isStart: dateStr === start,
-    isEnd: dateStr === end,
-    isInRange: dateStr > start && dateStr < end,
-    color,
-    isPreview: true,
-  };
+
+  const isStart = dateStr === start;
+  const isEnd   = dateStr === end;
+  const isMiddle = !isStart && !isEnd;
+
+  return { color, isStart, isEnd, isMiddle, isSingle: isStart && isEnd };
 }
 
 function todayStr() {
@@ -66,27 +84,25 @@ function todayStr() {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
 }
 
-// RangeFill renders the visual fill for one range slot within a cell
-function RangeFill({ rs }) {
-  if (!rs) return null;
-  const isSingle = rs.isStart && rs.isEnd;
+function formatCellAriaLabel(cell, monthName, year, today, ranges) {
+  if (!cell.isCurrent) return String(cell.dayNum);
 
-  return (
-    <div className={styles.rangeFillLayer} style={{ '--rc': rs.color }}>
-      {/* left segment */}
-      {!isSingle && (rs.isEnd || rs.isInRange) && (
-        <div className={`${styles.rangeSegLeft} ${rs.isPreview ? styles.isPreview : ''}`} />
-      )}
-      {/* right segment */}
-      {!isSingle && (rs.isStart || rs.isInRange) && (
-        <div className={`${styles.rangeSegRight} ${rs.isPreview ? styles.isPreview : ''}`} />
-      )}
-      {/* circle cap */}
-      {(rs.isStart || rs.isEnd || isSingle) && (
-        <div className={`${styles.rangeCircle} ${rs.isPreview ? styles.isPreview : ''}`} />
-      )}
-    </div>
+  let label = `${cell.dayNum} ${monthName} ${year}`;
+  if (cell.dateStr === today) label += ', today';
+
+  const matchingRanges = ranges.filter(r =>
+    r.startDate && r.endDate &&
+    cell.dateStr >= r.startDate && cell.dateStr <= r.endDate
   );
+
+  if (matchingRanges.length > 0) {
+    const desc = matchingRanges
+      .map(r => r.label || `${r.startDate} to ${r.endDate}`)
+      .join('; ');
+    label += `, in range: ${desc}`;
+  }
+
+  return label;
 }
 
 export default function CalendarGrid({
@@ -97,32 +113,33 @@ export default function CalendarGrid({
   rangeAnchor,
   notes,
   onDayClick,
+  onSetActiveRange,
+  onClearRange,
   onClearAnchor,
-  gridAnimKey, // changes when month changes to trigger the stagger animation
+  gridAnimKey,
+  onRangeAnnounce, // callback to update sr live region
 }) {
   const today = todayStr();
   const cells = buildCells(currentMonth, currentYear);
+  const weeks = groupIntoWeeks(cells);
   const [hoverDate, setHoverDate] = useState(null);
 
-  // reset hover when month changes or anchor clears
-  useEffect(() => {
-    setHoverDate(null);
-  }, [currentMonth, currentYear, rangeAnchor]);
+  useEffect(() => { setHoverDate(null); }, [currentMonth, currentYear, rangeAnchor]);
 
-  // convert cell index to dateStr for keyboard callbacks
+  // announce to screen reader when a range is set
+  useEffect(() => {
+    const r = ranges[activeRangeIdx];
+    if (r?.startDate && r?.endDate && onRangeAnnounce) {
+      onRangeAnnounce(`Range set from ${r.startDate} to ${r.endDate}`);
+    }
+  }, [ranges, activeRangeIdx]);
+
   function idxToDate(idx) {
     return cells[idx]?.dateStr ?? null;
   }
 
-  const handleSelect = useCallback((idx) => {
-    const d = idxToDate(idx);
-    if (d) onDayClick(d);
-  }, [cells, onDayClick]);
-
-  const handleRangeEnd = useCallback((idx) => {
-    const d = idxToDate(idx);
-    if (d) onDayClick(d); // second click completes range
-  }, [cells, onDayClick]);
+  const handleSelect  = useCallback((idx) => { const d = idxToDate(idx); if (d) onDayClick(d); }, [cells, onDayClick]);
+  const handleRangeEnd = useCallback((idx) => { const d = idxToDate(idx); if (d) onDayClick(d); }, [cells, onDayClick]);
 
   const { focusedIdx, handleGridKeyDown } = useKeyboard({
     totalCells: 42,
@@ -132,131 +149,154 @@ export default function CalendarGrid({
   });
 
   const activeRangeColor = ranges[activeRangeIdx]?.color;
-
-  // build a map of dateStr -> array of note colors for dot indicators
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+  // build note-dot map: dateStr → [colors]
   const noteMap = {};
-  notes.filter(n => n.monthKey === monthKey).forEach(n => {
-    if (n.rangeStart) {
-      // mark all dates in that range
+  notes
+    .filter(n => n.monthKey === monthKey)
+    .forEach(n => {
+      if (!n.rangeStart) return;
       const start = new Date(n.rangeStart);
-      const end = new Date(n.rangeEnd);
+      const end   = new Date(n.rangeEnd);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         if (!noteMap[key]) noteMap[key] = [];
         noteMap[key].push(n.color);
       }
-    }
-  });
+    });
 
   return (
     <div className={styles.gridSection}>
-      {/* day of week headers */}
-      <div className={styles.dowRow} aria-hidden="true">
-        {DOW_LABELS.map(d => (
-          <div key={d} className={styles.dowCell}>{d}</div>
-        ))}
-      </div>
-
-      {/* the grid */}
+      {/* day-of-week headers are inside role="grid" as columnheaders */}
       <div
         role="grid"
-        aria-label={`${MONTH_NAMES[currentMonth]} ${currentYear}`}
+        aria-label={`${MONTH_NAMES[currentMonth]} ${currentYear} calendar`}
+        aria-multiselectable="true"
         className={styles.dayGrid}
         tabIndex={0}
         onKeyDown={handleGridKeyDown}
       >
-        {cells.map((cell, idx) => {
-          const rangeStates = getRangeStates(cell.dateStr, ranges);
-          const preview = getPreviewState(cell.dateStr, rangeAnchor, hoverDate, activeRangeColor);
-          const isToday = cell.dateStr === today;
-          const isFocused = focusedIdx === idx;
-          const isAnchor = cell.dateStr && cell.dateStr === rangeAnchor;
-          const dotColors = noteMap[cell.dateStr] || [];
-
-          // aria label for accessibility
-          let ariaLabel = cell.isCurrent ? `${cell.dayNum} ${MONTH_NAMES[currentMonth]} ${currentYear}` : String(cell.dayNum);
-          const activeRange = ranges.find(r => r.startDate === cell.dateStr || r.endDate === cell.dateStr);
-          if (activeRange?.startDate && activeRange?.endDate) {
-            ariaLabel += `, selected range ${activeRange.startDate} to ${activeRange.endDate}`;
-          }
-
-          return (
+        {/* DOW header row */}
+        <div role="row" className={styles.dowRow}>
+          {DOW_SHORT.map((d, i) => (
             <div
-              key={`${gridAnimKey}-${idx}`}
-              role="gridcell"
-              aria-label={ariaLabel}
-              aria-selected={rangeStates.some(rs => rs !== null) ? 'true' : undefined}
-              className={[
+              key={d}
+              role="columnheader"
+              aria-label={DOW_FULL[i]}
+              className={`${styles.dowCell} ${WEEKEND_IDX.has(i) ? styles.weekend : ''}`}
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Week rows */}
+        {weeks.map((week, wi) => (
+          <div role="row" key={wi} className={styles.weekRow}>
+            {week.map((cell, ci) => {
+              const idx = wi * 7 + ci;
+              const rangeInfo = getCellRangeInfo(cell.dateStr, ranges, activeRangeIdx);
+              const preview   = (!rangeInfo && cell.isCurrent && rangeAnchor && cell.dateStr)
+                ? getPreviewInfo(cell.dateStr, rangeAnchor, hoverDate, activeRangeColor)
+                : null;
+
+              const isToday  = cell.isCurrent && cell.dateStr === today;
+              const isFocused = idx === focusedIdx;
+              const isAnchor  = cell.isCurrent && cell.dateStr === rangeAnchor;
+              const dotColors = noteMap[cell.dateStr] || [];
+
+              const classes = [
                 styles.dayCell,
                 !cell.isCurrent ? styles.otherMonth : '',
                 isToday ? styles.isToday : '',
                 isFocused ? styles.isFocused : '',
-                isAnchor ? styles.isAnchor : '',
-              ].filter(Boolean).join(' ')}
-              style={{ animationDelay: `${idx * 18}ms` }}
-              onClick={() => cell.isCurrent && cell.dateStr && onDayClick(cell.dateStr)}
-              onMouseEnter={() => cell.isCurrent && setHoverDate(cell.dateStr)}
-              onMouseLeave={() => setHoverDate(null)}
-            >
-              {/* range fills — existing confirmed ranges */}
-              {rangeStates.map((rs, i) => rs && (
-                <RangeFill key={i} rs={rs} />
-              ))}
+                isAnchor && !rangeInfo ? styles.isAnchor : '',
+                // confirmed range
+                rangeInfo?.isSingle                             ? styles.dayRangeSingle : '',
+                rangeInfo && !rangeInfo.isSingle && rangeInfo.isStart  ? styles.dayRangeStart  : '',
+                rangeInfo && !rangeInfo.isSingle && rangeInfo.isEnd    ? styles.dayRangeEnd    : '',
+                rangeInfo && !rangeInfo.isSingle && rangeInfo.isMiddle ? styles.dayRangeMid    : '',
+                // preview
+                preview?.isSingle                              ? styles.dayPreviewSingle : '',
+                preview && !preview.isSingle && preview.isStart  ? styles.dayPreviewStart  : '',
+                preview && !preview.isSingle && preview.isEnd    ? styles.dayPreviewEnd    : '',
+                preview && !preview.isSingle && preview.isMiddle ? styles.dayPreview       : '',
+              ].filter(Boolean).join(' ');
 
-              {/* preview fill while user is selecting */}
-              {preview && !rangeStates.some(rs => rs) && (
-                <RangeFill rs={preview} />
-              )}
+              const rc = (rangeInfo || preview)?.color;
 
-              <span className={styles.dayNum}>{cell.dayNum}</span>
+              return (
+                <div
+                  key={`${gridAnimKey}-${idx}`}
+                  role="gridcell"
+                  tabIndex={isFocused ? 0 : -1}
+                  aria-label={formatCellAriaLabel(cell, MONTH_NAMES[currentMonth], currentYear, today, ranges)}
+                  aria-selected={rangeInfo ? true : undefined}
+                  aria-disabled={!cell.isCurrent ? true : undefined}
+                  aria-current={isToday ? 'date' : undefined}
+                  className={classes}
+                  style={{ '--rc': rc, animationDelay: `${idx * 18}ms` }}
+                  onClick={() => cell.isCurrent && cell.dateStr && onDayClick(cell.dateStr)}
+                  onMouseEnter={() => cell.isCurrent && setHoverDate(cell.dateStr)}
+                  onMouseLeave={() => setHoverDate(null)}
+                >
+                  <span className={styles.dayNum}>{cell.dayNum}</span>
 
-              {/* note dots */}
-              {dotColors.length > 0 && (
-                <div className={styles.noteDots} aria-hidden="true">
-                  {dotColors.slice(0, 3).map((c, i) => (
-                    <div key={i} className={styles.noteDot} style={{ background: c }} />
-                  ))}
+                  {dotColors.length > 0 && (
+                    <div className={styles.noteDots} aria-hidden="true">
+                      {dotColors.slice(0, 3).map((c, i) => (
+                        <div key={i} className={styles.noteDot} style={{ background: c }} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ))}
       </div>
 
-      {/* range legend — click to select active range, X to clear it */}
+      {/* range legend — pill-style tags */}
       <div className={styles.rangeLegend} role="list" aria-label="Date ranges">
         {ranges.map((range, idx) => {
-          const isEmpty = !range.startDate;
+          const isEmpty  = !range.startDate;
           const isActive = idx === activeRangeIdx;
-          const slotLabel = range.label
-            || (isEmpty ? 'empty' : `${range.startDate?.slice(5)} – ${range.endDate?.slice(5)}`);
+          const dateLabel = isEmpty ? null : `${range.startDate.slice(5)} – ${range.endDate.slice(5)}`;
 
           return (
             <button
               key={range.id}
               role="listitem"
               className={[
-                styles.rangeSlot,
+                styles.rangePill,
                 isActive ? styles.isActive : '',
                 isEmpty ? styles.isEmpty : '',
+                !isEmpty ? styles.hasDates : '',
               ].filter(Boolean).join(' ')}
               style={{ '--rsc': range.color }}
               onClick={() => onSetActiveRange(idx)}
-              aria-label={`Range ${idx + 1}: ${slotLabel}${isActive ? ', active' : ''}`}
+              aria-label={`Range ${idx + 1}${dateLabel ? ': ' + dateLabel : ', empty'}${isActive ? ' (active)' : ''}`}
               aria-pressed={isActive}
             >
-              <div className={styles.rangeDot} />
-              <span className={styles.rangeSlotLabel}>{slotLabel}</span>
-              {!isEmpty && (
-                <button
-                  className={styles.rangeClearBtn}
-                  onClick={e => { e.stopPropagation(); onClearRange(idx); }}
-                  aria-label={`Clear range ${idx + 1}`}
-                  tabIndex={-1}
-                >
-                  ×
-                </button>
+              {isEmpty ? (
+                <>
+                  <span className={styles.rangePillDotEmpty} aria-hidden="true" />
+                  <span>Add range</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.rangePillDot} aria-hidden="true" />
+                  <span className={styles.rangePillDate}>{dateLabel}</span>
+                  <button
+                    className={styles.rangePillClear}
+                    onClick={e => { e.stopPropagation(); onClearRange(idx); }}
+                    aria-label={`Clear range ${idx + 1}`}
+                    tabIndex={-1}
+                  >
+                    ×
+                  </button>
+                </>
               )}
             </button>
           );

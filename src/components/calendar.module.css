@@ -1,160 +1,107 @@
 /* ============================================================
-   Wall Calendar — all component styles in one file.
-   Using CSS Modules so class names get scoped automatically.
-   Container queries handle ALL layout breakpoints inside the card.
+   Wall Calendar — component styles.
+   All design tokens come from globals.css (:root).
+   Container queries drive ALL layout breakpoints inside the card.
    ============================================================ */
 
-/* ---------- Page wrapper ---------- */
+/* ---------- Page ---------- */
 .page {
   min-height: 100vh;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 32px 16px 48px;
-  background: var(--page-bg);
+  padding: var(--space-8) var(--space-4) 64px;
+  background: var(--surface-page);
 }
 
-/* ---------- Container (enables container queries) ---------- */
+/* ---------- Container (enables @container) ---------- */
 .calendarOuter {
   container-type: inline-size;
   container-name: cal;
   width: 100%;
-  max-width: 960px;
-  position: relative;
+  max-width: 980px;
 }
 
 /* ---------- Card ---------- */
 .calendarCard {
-  background: var(--card-bg);
+  background: var(--surface-card);
   border-radius: 6px 6px 4px 4px;
   box-shadow: var(--shadow-card);
   overflow: hidden;
-  position: relative;
-  /* backface-visibility: hidden lets the flip animation not show the back side */
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
   backface-visibility: hidden;
   transition: --accent-color 500ms ease;
 }
 
-/* 3d flip animations */
-.flipOut {
-  animation: flipOut 300ms ease-in forwards;
-}
-
-.flipIn {
-  animation: flipIn 310ms ease-out forwards;
-}
+/* 3D page-flip */
+.flipOut { animation: flipOut 300ms ease-in forwards; }
+.flipIn  { animation: flipIn  310ms ease-out forwards; }
 
 @keyframes flipOut {
   0%   { transform: perspective(900px) rotateY(0deg); }
   100% { transform: perspective(900px) rotateY(90deg); }
 }
-
 @keyframes flipIn {
   0%   { transform: perspective(900px) rotateY(-90deg); }
   100% { transform: perspective(900px) rotateY(0deg); }
 }
 
-/* ---------- Card top bar (controls row) ---------- */
-.cardTopBar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 8px 14px 6px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
-  position: relative;
-  z-index: 10;
-}
-
-.topBarBtn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 4px 9px;
-  cursor: pointer;
-  letter-spacing: 0.03em;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.topBarBtn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-  background: var(--day-hover);
-}
-
-.topBarBtn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-.topBarSpacer {
-  flex: 1;
-}
-
 /* ---------- Spiral binding ---------- */
 .spiralRow {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 11px;
-  padding: 0 28px;
-  height: 34px;
-  background: var(--card-bg);
-  border-bottom: 2px solid var(--border-color);
+  gap: 13px;
+  padding: 0 var(--space-8);
+  height: 38px;
+  align-items: flex-end;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
   position: relative;
-  z-index: 5;
+  z-index: 2;
 }
 
 .coil {
-  width: 15px;
-  height: 22px;
-  border: 2px solid #b0a898;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #d8d0c8 0%, #a89880 55%, #c8c0b8 100%);
-  box-shadow: 1px 2px 3px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.45);
+  width: 18px;
+  height: 26px;
+  background: linear-gradient(160deg, #D4D0C8 0%, #A8A49C 45%, #C8C4BC 100%);
+  border-radius: 9px 9px 6px 6px;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15);
   position: relative;
+  transform-origin: bottom center;
   flex-shrink: 0;
 }
 
-/* slight variation so they don't look perfectly uniform (intentional) */
-.coil:nth-child(3n+1) {
-  height: 21px;
-  width: 14px;
-}
-.coil:nth-child(5n) {
-  transform: rotate(1.5deg);
-  height: 23px;
-}
-.coil:nth-child(7n) {
-  transform: rotate(-1deg);
-}
+/* slight hand-made variation — intentional, not a bug */
+.coil:nth-child(even)  { transform: rotate(1deg) translateY(1px); }
+.coil:nth-child(3n)    { transform: rotate(-0.5deg); height: 25px; }
+.coil:nth-child(5n+2)  { width: 17px; }
 
-/* hole in coil — the bit where the wire would pass through */
 .coil::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 5px;
-  height: 7px;
-  border-radius: 3px;
-  background: rgba(0,0,0,0.25);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  top: 4px; left: 3px;
+  width: 12px; height: 18px;
+  background: linear-gradient(160deg, #B8B4AC 0%, #888480 100%);
+  border-radius: 6px 6px 4px 4px;
 }
 
-/* ---------- Main body layout ---------- */
+:global(.dark-mode) .coil {
+  background: linear-gradient(160deg, #4A4640 0%, #2E2A26 45%, #3E3A36 100%);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
+}
+:global(.dark-mode) .coil::after {
+  background: linear-gradient(160deg, #383430 0%, #1E1A16 100%);
+}
+
+/* ---------- Calendar body layout ---------- */
 .calendarBody {
   display: flex;
   flex-direction: row;
+  flex: 1;
+  min-height: 0; /* critical for child overflow-y: auto to work */
 }
 
 /* ---------- Hero panel ---------- */
@@ -163,11 +110,11 @@
   overflow: hidden;
   flex-shrink: 0;
   width: 38%;
-  min-height: 420px;
-  cursor: pointer;
 }
 
 .heroImg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -175,769 +122,738 @@
   display: block;
   user-select: none;
   pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 
+/* two-layer gradient: darken towards bottom-right, then accent tint */
 .heroGradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    160deg,
-    rgba(0,0,0,0.08) 0%,
-    rgba(0,0,0,0.15) 40%,
-    rgba(0,0,0,0.5) 100%
-  );
-  /* also a gradient in the accent color at the bottom right corner */
-  background-image: linear-gradient(
-    160deg,
-    transparent 30%,
-    color-mix(in srgb, var(--accent-color) 60%, transparent) 100%
-  );
+  background:
+    linear-gradient(to bottom right, transparent 40%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(to top, color-mix(in srgb, var(--accent-color) 30%, transparent) 0%, transparent 55%);
 }
 
 .heroContent {
   position: absolute;
-  inset: 0;
+  bottom: 0; left: 0;
+  padding: var(--space-5) var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 18px 20px 22px;
+  gap: 1px;
+}
+
+/* year sits above the month name */
+.heroYear {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .heroMonthName {
-  font-family: 'Lora', Georgia, serif;
-  font-size: clamp(22px, 4vw, 36px);
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5cqw, 52px);
   font-weight: 600;
-  color: rgba(255,255,255,0.95);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  color: white;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.35);
 }
 
-.heroYear {
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.75);
-  margin-top: 3px;
-  letter-spacing: 0.06em;
-}
-
-/* nav arrows overlaid on hero */
+/* prev / next arrows — frosted glass circles on left/right edges */
 .heroPrevBtn,
 .heroNextBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 40px; height: 40px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.92);
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.9);
-  font-size: 16px;
-  /* frosted glass effect */
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
   z-index: 5;
 }
-
-.heroPrevBtn {
-  left: 10px;
-}
-
-.heroNextBtn {
-  right: 10px;
-}
+.heroPrevBtn { left: 10px; }
+.heroNextBtn { right: 10px; }
 
 .heroPrevBtn:hover,
 .heroNextBtn:hover {
-  background: rgba(255,255,255,0.28);
-  transform: translateY(-50%) scale(1.05);
+  background: rgba(255,255,255,0.30);
+  transform: translateY(-50%) scale(1.06);
+}
+.heroPrevBtn:active,
+.heroNextBtn:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
-.heroPrevBtn:focus-visible,
-.heroNextBtn:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-/* drag-drop overlay shown when file is dragged over hero */
-.heroDragOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
-  border: 2px dashed rgba(255,255,255,0.7);
-}
-
-.heroDragText {
-  color: white;
-  font-size: 14px;
-  font-weight: 400;
-  text-align: center;
-  letter-spacing: 0.03em;
-}
-
-/* camera icon / upload button */
+/* upload button — bottom-right, same frosted glass style */
 .heroUploadBtn {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
-  width: 30px;
-  height: 30px;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  width: 36px; height: 36px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: rgba(255,255,255,0.85);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  transition: background 0.15s ease;
+  transition: background var(--duration-fast) var(--ease-out);
   z-index: 5;
 }
+.heroUploadBtn:hover { background: rgba(255,255,255,0.30); }
 
-.heroUploadBtn:hover {
-  background: rgba(0,0,0,0.55);
-}
-
-.heroUploadBtn:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-/* "reset to default" button — shown when custom image is active */
 .heroResetBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 10px;
-  padding: 3px 7px;
-  border-radius: 3px;
+  top: var(--space-3);
+  right: var(--space-3);
+  font-size: var(--text-xs);
+  padding: 3px 8px;
+  border-radius: var(--radius-md);
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(6px);
   color: rgba(255,255,255,0.8);
-  border: 1px solid rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.2);
   cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: var(--font-ui);
   letter-spacing: 0.04em;
-  transition: background 0.15s ease;
   z-index: 5;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.heroResetBtn:hover { background: rgba(0,0,0,0.6); }
+
+.heroDragOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  border: 2px dashed rgba(255,255,255,0.65);
+  border-radius: inherit;
+}
+.heroDragText {
+  color: white;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
 }
 
-.heroResetBtn:hover {
-  background: rgba(0,0,0,0.6);
-}
-
-/* ---------- Right panel (grid + notes) ---------- */
+/* ---------- Right panel ---------- */
 .rightPanel {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* prevent flex overflow */
-  border-left: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-default);
 }
 
-/* ---------- Calendar grid section ---------- */
+/* ---------- Toolbar (Year, print, dark-mode) ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.toolbarBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+.toolbarBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+  transform: translateY(-1px);
+}
+.toolbarBtn:active { transform: scale(0.97); }
+
+/* ---------- Grid section ---------- */
 .gridSection {
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-3) var(--space-4) var(--space-3);
+  flex-shrink: 0;
 }
 
-/* day of week header */
+/* DOW header row — inside the grid */
 .dowRow {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 4px;
+  display: contents;
 }
 
 .dowCell {
   text-align: center;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 4px 0;
+  padding: var(--space-1) 0 var(--space-2);
 }
 
-/* the actual grid */
+.dowCell.weekend {
+  color: var(--accent-color);
+}
+
+/* the grid — column gap 0 so range fills form a continuous bar */
 .dayGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
+  column-gap: 0;
+  row-gap: 1px;
   outline: none;
 }
 
 .dayGrid:focus-visible {
   outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
-/* individual day cell */
+/* week rows use display: contents — semantic but invisible to layout */
+.weekRow {
+  display: contents;
+}
+
+/* ---------- Day cells ---------- */
 .dayCell {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
-  min-height: 36px;
-  max-height: 48px;
+  min-height: 44px;
   cursor: pointer;
-  border-radius: 3px;
-  overflow: hidden;
   user-select: none;
-  transition: background 0.1s ease;
-  animation: cellAppear 220ms ease-out both;
-}
-
-.dayCell:hover {
-  background: var(--day-hover);
+  border-radius: 0;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring),
+    color var(--duration-fast) var(--ease-out);
+  animation: cellAppear 220ms var(--ease-out) both;
 }
 
 @keyframes cellAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.dayCell:hover:not(.otherMonth):not(.dayRangeMid) {
+  background: var(--surface-sunken);
+  transform: scale(1.08);
+  z-index: 2;
+}
+.dayCell:active:not(.otherMonth) {
+  transform: scale(0.95);
 }
 
 .dayNum {
   position: relative;
-  z-index: 3;
-  font-size: 12px;
+  z-index: 2;
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--text-primary);
+  font-family: var(--font-ui);
   line-height: 1;
-  font-family: 'IBM Plex Sans', sans-serif;
 }
 
+/* other-month cells */
+.dayCell.otherMonth {
+  cursor: default;
+  pointer-events: none;
+}
 .dayCell.otherMonth .dayNum {
-  color: var(--border-color);
+  color: var(--text-tertiary);
 }
 
+/* today: accent bottom border + slightly bolder number, no filled circle */
 .dayCell.isToday .dayNum {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--accent-color);
 }
+.dayCell.isToday::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 30%; right: 30%;
+  height: 3px;
+  background: var(--accent-color);
+  border-radius: 2px;
+  z-index: 3;
+}
 
-/* focused cell indicator (keyboard nav) */
+/* keyboard focus indicator */
 .dayCell.isFocused {
   outline: 2px solid var(--accent-color);
   outline-offset: -2px;
+  border-radius: var(--radius-sm);
   z-index: 4;
 }
 
-/* note dot indicators */
+/* anchor cell (first click of range) */
+.dayCell.isAnchor .dayNum { color: white; z-index: 3; }
+.dayCell.isAnchor::before {
+  content: '';
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  background: var(--accent-color);
+  z-index: 1;
+  opacity: 0.8;
+}
+
+/* ---------- Range fills (confirmed) ---------- */
+/* --rc is set as inline style on each range-colored cell */
+
+.dayCell.dayRangeStart {
+  background: var(--rc);
+  border-radius: 20px 0 0 20px;
+}
+.dayCell.dayRangeEnd {
+  background: var(--rc);
+  border-radius: 0 20px 20px 0;
+}
+.dayCell.dayRangeSingle {
+  background: var(--rc);
+  border-radius: 20px;
+}
+.dayCell.dayRangeStart .dayNum,
+.dayCell.dayRangeEnd .dayNum,
+.dayCell.dayRangeSingle .dayNum {
+  color: white;
+  font-weight: 500;
+}
+.dayCell.dayRangeMid {
+  background: color-mix(in srgb, var(--rc) 14%, transparent);
+  border-radius: 0;
+}
+.dayCell.dayRangeMid .dayNum {
+  color: var(--rc);
+}
+
+/* ---------- Preview fills (during selection) ---------- */
+.dayCell.dayPreview {
+  background: color-mix(in srgb, var(--rc) 10%, transparent);
+  border-radius: 0;
+}
+.dayCell.dayPreview .dayNum { color: var(--rc); }
+
+.dayCell.dayPreviewStart {
+  background: color-mix(in srgb, var(--rc) 20%, transparent);
+  border-radius: 20px 0 0 20px;
+}
+.dayCell.dayPreviewEnd {
+  background: color-mix(in srgb, var(--rc) 20%, transparent);
+  border-radius: 0 20px 20px 0;
+}
+.dayCell.dayPreviewSingle {
+  background: color-mix(in srgb, var(--rc) 20%, transparent);
+  border-radius: 20px;
+}
+
+/* note dots */
 .noteDots {
   position: absolute;
-  bottom: 3px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 2px;
-  z-index: 4;
+  z-index: 3;
 }
-
 .noteDot {
-  width: 4px;
-  height: 4px;
+  width: 4px; height: 4px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-/* ---------- Range fills ---------- */
-/* each range layer is positioned absolute within the day cell */
-.rangeFillLayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* left half fill (for end cells and in-between cells) */
-.rangeSegLeft {
-  position: absolute;
-  top: 14%;
-  bottom: 14%;
-  left: 0;
-  right: 50%;
-  background: var(--rc);
-  opacity: 0.55;
-  mix-blend-mode: multiply;
-}
-
-/* right half fill (for start cells and in-between cells) */
-.rangeSegRight {
-  position: absolute;
-  top: 14%;
-  bottom: 14%;
-  left: 50%;
-  right: 0;
-  background: var(--rc);
-  opacity: 0.55;
-  mix-blend-mode: multiply;
-}
-
-/* the circle for start/end caps */
-.rangeCircle {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  background: var(--rc);
-  opacity: 0.8;
-  z-index: 2;
-  mix-blend-mode: multiply;
-}
-
-/* preview range fill (lighter while selecting) */
-.rangeSegLeft.isPreview,
-.rangeSegRight.isPreview {
-  opacity: 0.3;
-}
-
-.rangeCircle.isPreview {
-  opacity: 0.45;
-  border: 2px dashed var(--rc);
-  background: transparent;
-}
-
-/* anchor cell (first click) */
-.dayCell.isAnchor .dayNum {
-  color: white;
-}
-.dayCell.isAnchor::before {
-  content: '';
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  background: var(--accent-color);
-  z-index: 2;
-  opacity: 0.85;
-}
-
-/* in dark mode, switch blend mode for fills */
-:global(.dark-mode) .rangeSegLeft,
-:global(.dark-mode) .rangeSegRight,
-:global(.dark-mode) .rangeCircle {
-  mix-blend-mode: screen;
-  opacity: 0.5;
-}
-
-:global(.dark-mode) .rangeCircle {
-  opacity: 0.65;
 }
 
 /* ---------- Range legend ---------- */
 .rangeLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-default);
 }
 
-.rangeSlot {
-  display: flex;
+.rangePill {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px 4px 6px;
-  border-radius: 4px;
-  border: 1.5px solid var(--border-color);
-  cursor: pointer;
-  font-size: 11px;
-  transition: border-color 0.15s ease, background 0.15s ease;
-  background: none;
-  font-family: 'IBM Plex Sans', sans-serif;
+  gap: 5px;
+  padding: 4px 8px 4px 7px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-default);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
   color: var(--text-secondary);
-}
-
-.rangeSlot.isActive {
-  border-color: var(--rsc);
-  background: color-mix(in srgb, var(--rsc) 10%, transparent);
-  color: var(--text-primary);
-}
-
-.rangeSlot.isEmpty {
-  border-style: dashed;
-}
-
-.rangeSlot:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-.rangeDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--rsc);
-}
-
-.rangeSlot.isEmpty .rangeDot {
-  background: transparent;
-  border: 1.5px dashed var(--border-color);
-}
-
-.rangeSlotLabel {
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: none;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+  text-align: left;
   white-space: nowrap;
 }
+.rangePill.isEmpty {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+.rangePill.isActive {
+  border-color: var(--rsc);
+  border-style: solid;
+  color: var(--text-primary);
+}
+.rangePill.hasDates {
+  animation: pillPop 250ms var(--ease-spring) forwards;
+}
+@keyframes pillPop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
-.rangeClearBtn {
+.rangePillDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--rsc);
+  flex-shrink: 0;
+}
+.rangePillDotEmpty {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border-strong);
+  flex-shrink: 0;
+}
+.rangePillDate {
+  font-variant-numeric: tabular-nums;
+}
+.rangePillClear {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0 0 0 2px;
-  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 0;
+  font-size: 13px;
   line-height: 1;
-  opacity: 0.6;
-  transition: opacity 0.1s ease;
+  margin-left: 1px;
+  transition: color var(--duration-fast) var(--ease-out);
+  display: flex;
+  align-items: center;
 }
-
-.rangeClearBtn:hover {
-  opacity: 1;
-}
+.rangePillClear:hover { color: var(--text-primary); }
 
 /* ---------- Notes panel ---------- */
 .notesPanel {
-  padding: 14px 20px 20px;
+  padding: var(--space-4) var(--space-4) var(--space-6);
   flex: 1;
+  border-top: 1px solid var(--border-default);
 }
 
 .notesHeader {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-}
-
-.noteInputRow {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  margin-bottom: 10px;
-}
-
-.noteInput {
-  flex: 1;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 7px 10px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
-  background: var(--card-bg);
-  color: var(--text-primary);
-  resize: none;
-  outline: none;
-  transition: border-color 0.15s ease;
-  min-height: 34px;
-}
-
-.noteInput:focus {
-  border-color: var(--accent-color);
-}
-
-.noteInput::placeholder {
-  color: var(--border-color);
-}
-
-.noteAddBtn {
-  padding: 7px 12px;
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s ease;
-  letter-spacing: 0.03em;
-}
-
-.noteAddBtn:hover {
-  opacity: 0.88;
-}
-
-.noteAddBtn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-3);
 }
 
 /* color swatches */
 .colorSwatches {
   display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
   align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
-
 .colorSwatchLabel {
-  font-size: 10px;
-  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   margin-right: 2px;
 }
-
 .swatch {
-  width: 16px;
-  height: 16px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  border: none;
+  background: var(--sc);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
   flex-shrink: 0;
 }
-
-.swatch:hover {
-  transform: scale(1.15);
-}
-
+.swatch:hover { transform: scale(1.12); }
+/* active swatch: ring in its own color with a white gap */
 .swatch.isSelected {
-  border-color: var(--text-primary);
-  transform: scale(1.1);
+  box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--sc);
+  transform: scale(1.08);
 }
 
-.swatch:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
+/* note input row */
+.noteInputRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+  margin-bottom: var(--space-3);
 }
+.noteInput {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 8px var(--space-3);
+  resize: none;
+  outline: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+  min-height: 36px;
+}
+.noteInput::placeholder { color: var(--text-tertiary); }
+.noteInput:hover { border-color: var(--border-default); }
+.noteInput:focus {
+  border-color: var(--accent-color);
+  background: var(--surface-card);
+}
+
+/* add button */
+.noteAddBtn {
+  padding: 8px var(--space-4);
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+.noteAddBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.noteAddBtn:active { transform: scale(0.97); box-shadow: none; }
+.noteAddBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 /* notes list */
 .notesList {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  /* aria-live region so additions get announced */
+  gap: var(--space-2);
 }
 
+/* note item */
 .noteItem {
   display: flex;
   align-items: flex-start;
-  gap: 0;
-  background: var(--day-hover);
-  border-radius: 0 4px 4px 0;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   border-left: 3px solid var(--ni-color);
-  padding: 7px 10px 7px 10px;
+  background: color-mix(in srgb, var(--ni-color) 8%, transparent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   cursor: grab;
   position: relative;
-  transition: background 0.1s ease, box-shadow 0.1s ease;
+  animation: noteSlideIn var(--duration-base) var(--ease-out) both;
 }
+.noteItem:active { cursor: grabbing; }
 
-.noteItem:active {
-  cursor: grabbing;
-}
-
-.noteItem.isDragging {
-  opacity: 0.5;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+@keyframes noteSlideIn {
+  from { transform: translateX(-8px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
 .noteItem.isDragOver {
   box-shadow: 0 -2px 0 0 var(--accent-color);
 }
 
-.noteItemContent {
-  flex: 1;
-  min-width: 0;
+/* drag handle — appears on hover */
+.dragHandle {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
 }
+.noteItem:hover .dragHandle { opacity: 1; }
 
-.noteItemDate {
-  font-size: 9px;
-  color: var(--text-secondary);
+.noteBody { flex: 1; min-width: 0; }
+
+.noteRangeLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ni-color);
   margin-bottom: 2px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
-
-.noteItemText {
-  font-size: 12px;
+.noteText {
+  font-size: var(--text-sm);
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: break-word;
 }
 
+/* delete button — appears on hover */
 .noteDeleteBtn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  padding: 2px;
-  font-size: 13px;
+  color: var(--text-tertiary);
+  padding: 0;
+  font-size: 15px;
   line-height: 1;
   opacity: 0;
-  transition: opacity 0.1s ease;
+  transition: opacity var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
   flex-shrink: 0;
-  margin-left: 6px;
+  align-self: flex-start;
+  margin-top: 1px;
 }
-
-.noteItem:hover .noteDeleteBtn {
-  opacity: 0.6;
-}
-
-.noteDeleteBtn:hover {
-  opacity: 1 !important;
-}
-
-.noteDeleteBtn:focus-visible {
-  opacity: 1;
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-/* drag indicator line between items */
-.dropIndicator {
-  height: 2px;
-  background: var(--accent-color);
-  border-radius: 1px;
-  margin: 2px 0;
-}
+.noteItem:hover .noteDeleteBtn { opacity: 0.7; }
+.noteDeleteBtn:hover { opacity: 1 !important; color: var(--text-primary); }
 
 /* ---------- Year view modal ---------- */
 .yearViewOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(3px);
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  animation: overlayIn 200ms ease-out;
+  padding: var(--space-5);
+  animation: overlayIn 200ms var(--ease-out);
 }
-
 @keyframes overlayIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 .yearViewCard {
-  background: var(--card-bg);
-  border-radius: 8px;
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   width: 100%;
-  max-width: 760px;
+  max-width: 780px;
   max-height: 85vh;
   overflow-y: auto;
-  padding: 24px;
-  animation: cardIn 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: var(--space-6);
+  animation: cardScaleIn 220ms var(--ease-spring);
 }
-
-@keyframes cardIn {
-  from {
-    opacity: 0;
-    transform: scale(0.88);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes cardScaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .yearViewHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
-
 .yearViewTitle {
-  font-family: 'Lora', Georgia, serif;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .yearViewCloseBtn {
   background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 5px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
   cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 11px;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
   color: var(--text-secondary);
-  transition: background 0.15s ease;
+  transition: background var(--duration-fast) var(--ease-out);
 }
-
-.yearViewCloseBtn:hover {
-  background: var(--day-hover);
-}
-
-.yearViewCloseBtn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
+.yearViewCloseBtn:hover { background: var(--surface-sunken); }
 
 .monthsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--space-3);
 }
 
-/* mini month card */
 .miniMonth {
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-2) var(--space-3);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
 }
-
 .miniMonth:hover {
   border-color: var(--accent-color);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  background: var(--day-hover);
+  background: var(--surface-sunken);
 }
-
 .miniMonth.isCurrent {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 1px var(--accent-color);
 }
 
-.miniMonth:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
 .miniMonthName {
-  font-size: 10px;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 5px;
+  margin-bottom: var(--space-1);
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-family: 'IBM Plex Sans', sans-serif;
+  gap: 3px;
 }
-
 .miniMonthDot {
-  width: 5px;
-  height: 5px;
+  width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--accent-color);
   flex-shrink: 0;
@@ -948,15 +864,12 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
 }
-
 .miniDow {
   font-size: 7px;
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   padding: 1px 0;
-  font-family: 'IBM Plex Sans', sans-serif;
 }
-
 .miniCell {
   position: relative;
   aspect-ratio: 1;
@@ -965,30 +878,20 @@
   align-items: center;
   justify-content: center;
   border-radius: 2px;
-  color: var(--text-secondary);
-  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text-tertiary);
+  font-family: var(--font-ui);
 }
-
-.miniCell.miniCurrent {
-  color: var(--text-primary);
-}
-
-.miniCell.miniToday {
-  font-weight: 600;
-  color: var(--accent-color);
-}
-
+.miniCell.miniCurrent { color: var(--text-secondary); }
+.miniCell.miniToday { font-weight: 600; color: var(--accent-color); }
 .miniCellDot {
   position: absolute;
   bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
-  width: 3px;
-  height: 3px;
+  width: 3px; height: 3px;
   border-radius: 50%;
   background: var(--accent-color);
 }
-
 .miniRangeFill {
   position: absolute;
   inset: 10% 0;
@@ -1000,38 +903,34 @@
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: var(--space-6);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(0);
   background: var(--text-primary);
-  color: var(--card-bg);
-  padding: 8px 18px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  z-index: 200;
+  color: var(--surface-card);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
+  font: 500 var(--text-sm) var(--font-ui);
   pointer-events: none;
-  animation: toastIn 200ms ease-out, toastOut 200ms ease-in 1.3s forwards;
+  z-index: 200;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation:
+    toastIn 200ms var(--ease-out),
+    toastOut 200ms var(--ease-in-out) 1.3s forwards;
 }
-
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-
 @keyframes toastOut {
   from { opacity: 1; }
-  to { opacity: 0; }
+  to   { opacity: 0; }
 }
 
-/* ---------- SVG filter element (hidden) ---------- */
+/* ---------- SVG filter element (hidden, for dark mode texture) ---------- */
 .svgFilters {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1044,126 +943,91 @@
   pointer-events: none;
   z-index: 1;
   border-radius: inherit;
-  opacity: 1;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='pn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23pn)' opacity='0.055'/%3E%3C/svg%3E");
   background-size: 250px 250px;
 }
 
-/* ---------- Container queries — layout breakpoints ---------- */
+/* ---------- Container queries ---------- */
 
-/* < 500px — stacked, hero on top, compact everything */
+/* < 500px: stacked, hero on top 180px */
 @container cal (max-width: 499px) {
-  .calendarBody {
-    flex-direction: column;
-  }
-
-  .heroPanel {
-    width: 100%;
-    min-height: 200px;
-  }
-
-  .rightPanel {
-    border-left: none;
-    border-top: 1px solid var(--border-color);
-  }
-
-  .monthsGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .heroMonthName {
-    font-size: 22px;
-  }
-
-  .dayCell {
-    min-height: 30px;
-  }
+  .calendarBody { flex-direction: column; }
+  .heroPanel { width: 100%; height: 180px; }
+  .rightPanel { border-left: none; border-top: 1px solid var(--border-default); }
+  .heroMonthName { font-size: 28px; }
+  .monthsGrid { grid-template-columns: repeat(3, 1fr); }
+  .dayCell { min-height: 36px; }
 }
 
-/* 500–750px — side by side hero + grid, notes below */
+/* 500–749px: hero left 200px wide */
 @container cal (min-width: 500px) and (max-width: 749px) {
-  .calendarBody {
-    flex-direction: row;
-  }
-
-  .heroPanel {
-    width: 42%;
-    min-height: 360px;
-  }
-
-  .rightPanel {
-    flex-direction: column;
-  }
-
-  .monthsGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .calendarBody { flex-direction: row; }
+  .heroPanel { width: 200px; flex-shrink: 0; }
+  .heroMonthName { font-size: 30px; }
+  .monthsGrid { grid-template-columns: repeat(3, 1fr); }
+  .dayCell { min-height: 40px; }
 }
 
-/* > 750px — full layout, hero + (grid + notes stacked) */
+/* ≥ 750px: hero 38%, right 62% */
 @container cal (min-width: 750px) {
-  .heroPanel {
-    width: 37%;
-    min-height: 520px;
-  }
-
-  .rightPanel {
-    flex-direction: column;
-  }
-
-  .dayCell {
-    min-height: 42px;
-  }
-
-  .dayNum {
-    font-size: 13px;
-  }
+  .calendarBody { flex-direction: row; }
+  .heroPanel { width: 38%; }
+  .dayCell { min-height: 52px; }
+  .dayNum { font-size: var(--text-sm); }
 }
 
-/* ---------- Print styles ---------- */
+/* ---------- Print ---------- */
 @media print {
-  .calendarOuter {
-    max-width: 100%;
-  }
+  @page { size: A4 portrait; margin: 15mm 12mm; }
 
-  .cardTopBar,
-  .heroPrevBtn,
-  .heroNextBtn,
-  .heroUploadBtn,
-  .heroResetBtn,
-  .noteInput,
-  .noteAddBtn,
-  .colorSwatches,
-  .rangeClearBtn,
-  .noteDeleteBtn,
+  body { background: white !important; }
+
   .spiralRow,
-  .topBarBtn {
-    display: none !important;
-  }
-
-  .calendarBody {
-    flex-direction: row;
-  }
-
-  .heroPanel {
-    width: 35%;
-    page-break-inside: avoid;
-  }
+  .heroPrevBtn, .heroNextBtn,
+  .heroUploadBtn, .heroResetBtn,
+  .toolbar,
+  .notesPanel .colorSwatches,
+  .noteInputRow,
+  .dragHandle,
+  .noteDeleteBtn,
+  .yearViewOverlay,
+  .toast { display: none !important; }
 
   .calendarCard {
-    box-shadow: none;
-    border: 1px solid #ccc;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    border-radius: 0 !important;
+    display: block !important;
+    max-height: none !important;
   }
 
-  .dayGrid {
-    page-break-inside: avoid;
-  }
+  .calendarBody { display: block !important; }
 
-  .notesList {
-    page-break-inside: avoid;
-  }
-
-  .noteItem {
+  .heroPanel {
+    width: 100% !important;
+    height: 80mm !important;
     break-inside: avoid;
+    display: block !important;
+    position: relative !important;
   }
+
+  .rightPanel {
+    width: 100% !important;
+    overflow: visible !important;
+    border-left: none !important;
+  }
+
+  .dayGrid { break-inside: avoid; }
+
+  .dayRangeMid,
+  .dayRangeStart,
+  .dayRangeEnd,
+  .dayRangeSingle {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .noteItem { break-inside: avoid; border-left-width: 4px !important; }
+
+  .heroMonthName { font-size: 48pt !important; }
 }

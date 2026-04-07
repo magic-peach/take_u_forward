@@ -2,7 +2,16 @@ import { useRef, useState, useCallback } from 'react';
 import { MONTH_NAMES, DEFAULT_HERO_IMAGES } from './useCalendarState';
 import styles from './calendar.module.css';
 
-// hero panel — left side image with month name + nav arrows + drag/drop upload
+// inline camera SVG — no icon library needed
+function CameraIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  );
+}
+
 export default function CalendarHero({
   currentMonth,
   currentYear,
@@ -17,23 +26,19 @@ export default function CalendarHero({
 
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
   const customSrc = customImages[monthKey];
-  const defaultSrc = DEFAULT_HERO_IMAGES[currentMonth];
-  const imageSrc = customSrc || defaultSrc;
+  const imageSrc = customSrc || DEFAULT_HERO_IMAGES[currentMonth];
 
   function readImageFile(file) {
     if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      onSetCustomImage(monthKey, e.target.result);
-    };
+    reader.onload = (e) => onSetCustomImage(monthKey, e.target.result);
     reader.readAsDataURL(file);
   }
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(false);
-    const file = e.dataTransfer.files[0];
-    readImageFile(file);
+    readImageFile(e.dataTransfer.files[0]);
   }, [monthKey]);
 
   const handleDragOver = useCallback((e) => {
@@ -41,14 +46,10 @@ export default function CalendarHero({
     setIsDragOver(true);
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    setIsDragOver(false);
-  }, []);
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
 
-  function handleFileInputChange(e) {
-    const file = e.target.files[0];
-    readImageFile(file);
-    // reset so same file can be re-uploaded
+  function handleFileChange(e) {
+    readImageFile(e.target.files[0]);
     e.target.value = '';
   }
 
@@ -69,48 +70,34 @@ export default function CalendarHero({
 
       <div className={styles.heroGradient} />
 
-      {/* drag-drop overlay */}
       {isDragOver && (
         <div className={styles.heroDragOverlay}>
           <p className={styles.heroDragText}>Drop to set as cover</p>
         </div>
       )}
 
+      {/* year above month name, both bottom-left */}
       <div className={styles.heroContent}>
-        <h2 className={styles.heroMonthName}>{MONTH_NAMES[currentMonth]}</h2>
         <p className={styles.heroYear}>{currentYear}</p>
+        <h2 className={styles.heroMonthName}>{MONTH_NAMES[currentMonth]}</h2>
       </div>
 
-      {/* prev arrow */}
-      <button
-        className={styles.heroPrevBtn}
-        onClick={onPrev}
-        aria-label="Previous month"
-      >
+      <button className={styles.heroPrevBtn} onClick={onPrev} aria-label="Previous month">
         ‹
       </button>
-
-      {/* next arrow */}
-      <button
-        className={styles.heroNextBtn}
-        onClick={onNext}
-        aria-label="Next month"
-      >
+      <button className={styles.heroNextBtn} onClick={onNext} aria-label="Next month">
         ›
       </button>
 
-      {/* camera upload button */}
       <button
         className={styles.heroUploadBtn}
         onClick={() => fileInputRef.current?.click()}
         aria-label="Upload custom photo"
         title="Upload photo"
       >
-        {/* unicode camera symbol */}
-        &#128247;
+        <CameraIcon />
       </button>
 
-      {/* reset button — only shows when custom image is active */}
       {customSrc && (
         <button
           className={styles.heroResetBtn}
@@ -121,13 +108,12 @@ export default function CalendarHero({
         </button>
       )}
 
-      {/* hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         style={{ display: 'none' }}
-        onChange={handleFileInputChange}
+        onChange={handleFileChange}
         aria-hidden="true"
         tabIndex={-1}
       />
