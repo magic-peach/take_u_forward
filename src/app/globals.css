@@ -1,40 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+/* register --accent-color as animatable — browsers that support @property
+   will tween it automatically when the value changes. others just snap. */
+@property --accent-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2C3E7A;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --accent-color: #2C3E7A;
+  --page-bg: #F2EFE9;
+  --card-bg: #FFFFFF;
+  --text-primary: #1a1917;
+  --text-secondary: #706c67;
+  --border-color: #E0DDD8;
+  --day-hover: #f5f3ef;
+  --shadow-card: 0 6px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
 body {
-  max-width: 100vw;
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* dark mode driven by class on body, not prefers-color-scheme
+   (manual toggle overrides system preference) */
+body.dark-mode {
+  --page-bg: #111009;
+  --card-bg: #1E1B16;
+  --text-primary: #e8e4df;
+  --text-secondary: #a8a49f;
+  --border-color: #2e2b26;
+  --day-hover: #2a2720;
+  --shadow-card: 0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* prefers-color-scheme as a baseline — manual toggle wins */
+@media (prefers-color-scheme: dark) {
+  body:not(.light-mode) {
+    --page-bg: #111009;
+    --card-bg: #1E1B16;
+    --text-primary: #e8e4df;
+    --text-secondary: #a8a49f;
+    --border-color: #2e2b26;
+    --day-hover: #2a2720;
+    --shadow-card: 0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  }
 }
 
 a {
@@ -42,8 +65,17 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* respect motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
   }
 }
